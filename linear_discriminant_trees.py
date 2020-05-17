@@ -229,33 +229,48 @@ if __name__ == '__main__':
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+    for test_size in [0.2, 0.25, 0.3]:
+        training_accuracies, validation_accuracies = [], []
+        for i in range(10):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
 
-    model = LDTree()
-    model.fit(X_train, y_train)
-    print(f'Training accuracy: {accuracy_score(y_train, model.predict(X_train))}')
-    print(f'Validation accuracy: {accuracy_score(y_test, model.predict(X_test))}')
+            model = LDTree()
+            model.fit(X_train, y_train)
+            training_accuracies.append(accuracy_score(y_train, model.predict(X_train)))
+            validation_accuracies.append(accuracy_score(y_test, model.predict(X_test)))
+
+        print(test_size, np.mean(training_accuracies), np.mean(validation_accuracies))
 
     # Breast Cancer Dataset
     dataset = pd.read_csv('data/breast_cancer.data')
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+    for test_size in [0.2, 0.25, 0.3]:
+        training_accuracies, validation_accuracies = [], []
+        for i in range(10):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
 
-    model = LDTree()
-    model.fit(X_train, y_train)
-    print(f'Training accuracy: {accuracy_score(y_train, model.predict(X_train))}')
-    print(f'Validation accuracy: {accuracy_score(y_test, model.predict(X_test))}')
+            model = LDTree()
+            model.fit(X_train, y_train)
+            training_accuracies.append(accuracy_score(y_train, model.predict(X_train)))
+            validation_accuracies.append(accuracy_score(y_test, model.predict(X_test)))
+
+        print(test_size, np.mean(training_accuracies), np.mean(validation_accuracies))
 
     # Ecoli Dataset
     dataset = pd.read_csv('data/ecoli.data', sep='\s+')
     X = dataset.iloc[:, 1:-1]
     y = dataset.iloc[:, -1]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+    for test_size in [0.2, 0.25, 0.3]:
+        training_accuracies, validation_accuracies = [], []
+        for i in range(10):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
 
-    model = LDTree()
-    model.fit(X_train, y_train)
-    print(f'Training accuracy: {accuracy_score(y_train, model.predict(X_train))}')
-    print(f'Validation accuracy: {accuracy_score(y_test, model.predict(X_test))}')
+            model = LDTree()
+            model.fit(X_train, y_train)
+            training_accuracies.append(accuracy_score(y_train, model.predict(X_train)))
+            validation_accuracies.append(accuracy_score(y_test, model.predict(X_test)))
+
+        print(test_size, np.mean(training_accuracies), np.mean(validation_accuracies))
