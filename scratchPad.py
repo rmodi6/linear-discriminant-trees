@@ -186,7 +186,7 @@ class LDTree:
     @staticmethod
     def compute_entropy(prediction, total):
         val = float(prediction) / total
-        return -1.0 * (val) * np.log2(val)
+        return -1.0 * val * np.log2(val)
 
     @staticmethod
     def get_lda_predictions(split, lda):
@@ -224,8 +224,33 @@ class LDTree:
 
 
 if __name__ == '__main__':
+    # Iris Dataset
     dataset = pd.read_csv('data/iris.data')
     X = dataset.iloc[:, :-1]
+    y = dataset.iloc[:, -1]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+
+    model = LDTree()
+    model.fit(X_train, y_train)
+    print(f'Training accuracy: {accuracy_score(y_train, model.predict(X_train))}')
+    print(f'Validation accuracy: {accuracy_score(y_test, model.predict(X_test))}')
+
+    # Breast Cancer Dataset
+    dataset = pd.read_csv('data/breast_cancer.data')
+    X = dataset.iloc[:, :-1]
+    y = dataset.iloc[:, -1]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+
+    model = LDTree()
+    model.fit(X_train, y_train)
+    print(f'Training accuracy: {accuracy_score(y_train, model.predict(X_train))}')
+    print(f'Validation accuracy: {accuracy_score(y_test, model.predict(X_test))}')
+
+    # Ecoli Dataset
+    dataset = pd.read_csv('data/ecoli.data', sep='\s+')
+    X = dataset.iloc[:, 1:-1]
     y = dataset.iloc[:, -1]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
