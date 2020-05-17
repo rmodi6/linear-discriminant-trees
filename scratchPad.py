@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[152]:
-
-
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
@@ -12,15 +6,9 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 
 class Utils:
-    def load_dataset(self, path, cols):
-        df = pd.read_csv(path, names=cols)
-        return df
-
-
-def euclidean_distance(X1, X2):
-    X1, X2 = np.array(X1), np.array(X2)
-
-    return np.sqrt(np.sum(np.square(X1 - X2)))
+    @staticmethod
+    def euclidean_distance(x1, x2):
+        return np.sqrt(np.sum(np.square(x1 - x2)))
 
 
 class TreeNode:
@@ -44,39 +32,28 @@ class LabelDetails:
     def get_values(self):
         return self.X.values
 
+    def distance(self, other):
+        return Utils.euclidean_distance(self.mean, other.mean)
+
     def __eq__(self, other):
-        """Overrides the default implementation"""
-        if isinstance(other, LabelDetails):
-            return self.label == other.label and (self.mean == other.mean).all()
-        return False
+        return isinstance(other, LabelDetails) and self.label == other.label and np.all(self.mean == other.mean)
 
     def __ne__(self, other):
-        ret = not self.__eq__(other)
-        return ret
-
-    def __str__(self):
-        str_ = "Class details: "
-        str_ += " - means:" + str(self.mean) + "\n"
-        str_ += " - class_name:" + self.label + "\n"
-        str_ += " - num_instances:" + str(self.samples)
-        return str_
+        return not self.__eq__(other)
 
 
-class Model:
+class LDTree:
     def __init__(self):
-        # Initialize class parameters
         self.root = None
 
     def fit(self, X, y):
-        # Function to train a decision tree for the given training data X
         label_details = self.create_labels(X, y)
         self.root = self.build_tree(label_details)
-        print(str(label_details))
 
     def predict(self, X_test):
         y_preds = []
         for i, row in X_test.iterrows():
-            y_preds.append(self.classify(row.values.reshape(-1, 4), self.root))
+            y_preds.append(self.classify(row.values.reshape(-1, X_test.shape[1]), self.root))
         return y_preds
 
     def classify(self, X, node):
@@ -87,7 +64,8 @@ class Model:
         if node.val.predict(X) == 1:
             return self.classify(X, node.right)
 
-    def build_linear_discriminant(self, left_split, right_split):
+    @staticmethod
+    def build_linear_discriminant(left_split, right_split):
         features, labels = None, None
 
         for label_detail in left_split:
@@ -124,20 +102,21 @@ class Model:
 
         return TreeNode(lda_model, left_node, right_node)
 
-    def heuristic_split(self, label_details):
+    @staticmethod
+    def heuristic_split(label_details):
         maximum_distance = float('-inf')
         splits = {}
         for i in range(len(label_details)):
             for j in range(i, len(label_details)):
-                distance = euclidean_distance(label_details[i].mean, label_details[j].mean)
+                distance = label_details[i].distance(label_details[j])
                 if distance > maximum_distance:
                     maximum_distance = distance
                     splits = {'left': [label_details[i]], 'right': [label_details[j]]}
         maximum_distance_splits = splits['left'] + splits['right']
         for label_detail in label_details:
             if label_detail not in maximum_distance_splits:
-                left_distance = euclidean_distance(label_detail.mean, splits['left'][0].mean)
-                right_distance = euclidean_distance(label_detail.mean, splits['right'][0].mean)
+                left_distance = label_detail.distance(splits['left'][0])
+                right_distance = label_detail.distance(splits['right'][0])
                 if left_distance < right_distance:
                     splits['left'].append(label_detail)
                 else:
@@ -152,7 +131,6 @@ class Model:
             left_split_copy = left_split.copy()
             right_split_copy = right_split.copy()
 
-            # equals()
             if label_detail in left_split:
                 left_split_copy = [o for o in left_split_copy if o != label_detail]
                 right_split_copy.append(label_detail)
@@ -169,8 +147,6 @@ class Model:
                 maximum_information_gain = information_gain
                 best_partition = (left_split_copy, right_split_copy)
 
-        # TODO: remove this
-        assert (len(best_partition[0]) + len(best_partition[1]) == len(left_split) + len(right_split))
         return best_partition
 
     def compute_information_gain(self, left_split, right_split):
@@ -182,10 +158,8 @@ class Model:
         total_left_samples = sum([ld.sample_count for ld in left_split])
         total_right_samples = sum([rd.sample_count for rd in right_split])
         total = total_left_samples + total_right_samples
-        #         print(str(total) + " " + str(total_right_samples) + " " + str(total_left_samples))
 
         e0 = 0.0
-        information_gain = 0.0
         for detail in left_split + right_split:
             e0 = e0 + self.compute_entropy(detail.sample_count, total)
 
@@ -209,11 +183,13 @@ class Model:
 
         return information_gain
 
-    def compute_entropy(self, prediction, total):
+    @staticmethod
+    def compute_entropy(prediction, total):
         val = float(prediction) / total
         return -1.0 * (val) * np.log2(val)
 
-    def get_lda_predictions(self, split, lda):
+    @staticmethod
+    def get_lda_predictions(split, lda):
         left_predictions = []
         right_predictions = []
         for label_detail in split:
@@ -232,7 +208,8 @@ class Model:
 
         return left_predictions, right_predictions
 
-    def create_labels(self, X, y):
+    @staticmethod
+    def create_labels(X, y):
         unique_classes = set(y.unique())
         label_details = []
         for class_type in unique_classes:
@@ -246,17 +223,14 @@ class Model:
         return label_details
 
 
-# constants
-iris_column_names = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'class']
-utils = Utils()
-dataset = utils.load_dataset('data/iris.data', cols=iris_column_names)
-X = dataset.iloc[:, :-1]
-y = dataset.iloc[:, -1]
+if __name__ == '__main__':
+    dataset = pd.read_csv('data/iris.data')
+    X = dataset.iloc[:, :-1]
+    y = dataset.iloc[:, -1]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
 
-model = Model()
-model.fit(X_train, y_train)
-y_preds = model.predict(X_test)
-print(accuracy_score(y_test, y_preds))
-print("Done")
+    model = LDTree()
+    model.fit(X_train, y_train)
+    print(f'Training accuracy: {accuracy_score(y_train, model.predict(X_train))}')
+    print(f'Validation accuracy: {accuracy_score(y_test, model.predict(X_test))}')
