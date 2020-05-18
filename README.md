@@ -5,6 +5,11 @@ Olcay Taner Yildiz and Ethem Alpaydin published in the International Journal of 
 Artificial Intelligence.
 
 ### Usage
+Install the required libraries
+```bash
+pip install -r requirements.txt
+```
+Run the classifier
 ```bash
 python3 linear_discriminant_trees.py
 ```
